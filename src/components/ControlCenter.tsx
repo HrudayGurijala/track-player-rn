@@ -1,11 +1,12 @@
 import { Pressable, StyleSheet, View } from 'react-native'
 import React from 'react'
-import TrackPlayer, { State, usePlaybackState } from 'react-native-track-player'
+import TrackPlayer, {  usePlaybackState,State } from 'react-native-track-player'
 import { playbackService } from '../../musicPlayerService'
 import Icon from 'react-native-vector-icons/MaterialIcons'
 
 const ControlCenter = () => {
-    const playBackState = usePlaybackState() 
+    const playBackState = usePlaybackState();
+    // const isPlaying = playBackState === State.Playing;
 
     const skipToNext = async ()=>{
         await TrackPlayer.skipToNext()

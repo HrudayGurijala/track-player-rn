@@ -1,4 +1,4 @@
-import React, {useState} from 'react'
+import React, {useRef, useState} from 'react'
 import { Dimensions, FlatList, Image, StyleSheet, View } from 'react-native';
 
 import TrackPlayer, {
@@ -16,48 +16,54 @@ import ControlCenter from '../components/ControlCenter';
 const {width} = Dimensions.get('window')
 
 const MusicPlayer = () => {
-    const [track, setTrack] = useState<Track | null>()
+    const [track, setTrack] = useState<Track | null>();
+    const flatListRef = useRef<FlatList>(null); // Ref to control FlatList
 
     useTrackPlayerEvents([Event.PlaybackActiveTrackChanged], async event => {
         switch (event.type) {
             case Event.PlaybackActiveTrackChanged:
-                const playingTrack = await TrackPlayer.getTrack(event.track)
+                const playingTrack = await TrackPlayer.getActiveTrack()
                 setTrack(playingTrack)
+                    // Directly scroll to the index from the event
+                    if (event.index != null) {
+                        flatListRef.current?.scrollToIndex({ index: event.index, animated: true });
+                    } else {
+                        console.log("No index provided in event");
+                    }
                 break;
         }
     })
 
-    const renderArtWork = () => {
+    const renderArtWork = ({item}: {item: Track}) => {
         return(
-            <View style={styles.listArtWrapper}>
-                <View style={styles.albumContainer}>
-                    {track?.artwork && (
-                        <Image
-                        style={styles.albumArtImg}
-                        source={{uri: track?.artwork?.toString()}}
-                        />
-                    )}
-                </View>
+          <View style={styles.listArtWrapper}>
+            <View style={styles.albumContainer}>
+              {item?.artwork && (
+                <Image
+                  style={styles.albumArtImg}
+                  source={{uri: item?.artwork?.toString()}}
+                />
+              )}
             </View>
+          </View>
         )
+      }
+
+      return (
+        <View style={styles.container}>
+          <FlatList
+            horizontal
+            ref={flatListRef}
+            data={playListData}
+            renderItem={renderArtWork}
+            keyExtractor={song => song.id.toString()}
+          />
+          <SongInfo track={track} />
+          <SongSlider/>
+          <ControlCenter/>
+        </View>
+      )
     }
-
-  return (
-    <View style={styles.container}>
-        <FlatList
-        horizontal
-        data={playListData}
-        renderItem={renderArtWork}
-        keyExtractor={song => song.id.toString()}
-        />
-
-        <SongInfo track={track}/>
-        <SongSlider />
-        <ControlCenter />
-    </View>
-  )
-}
-
 const styles = StyleSheet.create({
     container: {
       flex: 1,
